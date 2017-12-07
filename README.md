@@ -29,7 +29,7 @@ copy `AssetBundles` folder to the web server.
 
 ## Load AssetBundle Sample
 
-```
+```:Sample.cs
 using System;
 using System.Collections;
 using UnityEngine;
