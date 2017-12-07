@@ -72,3 +72,6 @@ namespace GAssetBundle
 }
 
 ```
+## License
+MIT
+
