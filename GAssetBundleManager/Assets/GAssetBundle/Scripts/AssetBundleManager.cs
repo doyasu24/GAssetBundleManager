@@ -22,11 +22,7 @@ namespace GAssetBundle
         {
             var platformName = GetPlatformName();
             this.assetBundleUrl = assetBundleUrl + platformName + "/";
-            return DownloadAsset<AssetBundleManifest>(platformName, "AssetBundleManifest")
-                .Do(m =>
-                {
-                    Manifest = m;
-                }).AsUnitObservable();
+            return DownloadAssetBundleManifest(platformName);
         }
 
         public IObservable<AssetBundle> GetAssetBundle(string assetBundleName, IProgress<float> downloadProgress = null)
@@ -90,10 +86,15 @@ namespace GAssetBundle
 #endif
         }
 
-        IObservable<T> DownloadAsset<T>(string assetBundleName, string assetName) where T : UnityEngine.Object
+        IObservable<Unit> DownloadAssetBundleManifest(string assetBundleName)
         {
-            return DownloadAssetBundle(assetBundleName)
-                .SelectMany(ab => LoadAssetFromAssetBundle<T>(ab, assetName));
+            return DownloadAssetBundle(assetBundleName).SelectMany(ab =>
+            {
+                var observable = LoadAssetFromAssetBundle<AssetBundleManifest>(ab, "AssetBundleManifest");
+                return observable.Finally(() => ab.Unload(false));
+            })
+                                                       .Do(m => Manifest = m)
+                                                       .AsUnitObservable();
         }
 
         IObservable<AssetBundle> DownloadAssetBundle(string assetBundleName)
