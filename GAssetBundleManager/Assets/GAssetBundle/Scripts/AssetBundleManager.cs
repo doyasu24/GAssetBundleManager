@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UniRx;
 using System.Linq;
+using GAssetBundle.Web;
 
 namespace GAssetBundle
 {
@@ -13,13 +14,21 @@ namespace GAssetBundle
         public AssetBundleManifest Manifest { get; private set; }
         string assetBundleUrl;
         Dictionary<string, LoadedAssetBundle> loadedAssetBundleMap = new Dictionary<string, LoadedAssetBundle>();
+        Dictionary<string, string> headers;
 
         AssetBundleManager()
         {
         }
 
-        public IObservable<Unit> ConnectToServer(string assetBundleUrl)
+        /// <summary>
+        /// Connects to AssetBundle server.
+        /// </summary>
+        /// <returns>Connection notification.</returns>
+        /// <param name="assetBundleUrl">Server URL.</param>
+        /// <param name="headers">HTTP headers.</param>
+        public IObservable<Unit> ConnectToServer(string assetBundleUrl, Dictionary<string, string> headers = null)
         {
+            this.headers = headers;
             var platformName = GetPlatformName();
             this.assetBundleUrl = assetBundleUrl + platformName + "/";
             return DownloadAssetBundleManifest(platformName);
@@ -99,7 +108,7 @@ namespace GAssetBundle
 
         IObservable<AssetBundle> DownloadAssetBundle(string assetBundleName)
         {
-            return ObservableWeb.GetAssetBundle(assetBundleUrl + assetBundleName);
+            return WebRequestProcedure.GetAssetBundle(assetBundleUrl + assetBundleName, headers);
         }
 
         IObservable<T> LoadAssetFromAssetBundle<T>(AssetBundle assetBundle, string assetName) where T : UnityEngine.Object
@@ -128,7 +137,7 @@ namespace GAssetBundle
         IEnumerator DownloadAndCacheAsBinary(string assetBundleName, IProgress<float> progress)
         {
             var url = assetBundleUrl + assetBundleName;
-            var getBytes = ObservableWeb.GetAndGetBytes(url, progress).ToYieldInstruction();
+            var getBytes = WebRequestProcedure.GetAndGetBytes(url, headers, progress).ToYieldInstruction();
             yield return getBytes;
             var hash = Manifest.GetAssetBundleHash(assetBundleName);
             AssetBundleCache.Save(assetBundleName, hash, getBytes.Result);
