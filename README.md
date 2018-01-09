@@ -10,8 +10,7 @@ Of course, if the latest Cache is stored, the AssetBundle is read from Cache.
 
 Unity 5.6.x or later.
 
-import custom UniRx unitypackage (only add `ObservableWeb.cs` and `ObservableWebJson.cs`)
-[UniRx-UnityWebRequest-AsObservable-#101](https://github.com/kado-yasuyuki/UniRx/releases/tag/5.6.0)
+import [UniRx](https://github.com/neuecc/UniRx) unitypackage
 
 import GAssetBundleMangaer unitypackage from releases page.
 
@@ -34,8 +33,9 @@ using System;
 using System.Collections;
 using UnityEngine;
 using UniRx;
+using GAssetBundle.Web;
 
-namespace GAssetBundle
+namespace GAssetBundle.Sample
 {
     public class Sample : MonoBehaviour
     {
@@ -51,26 +51,16 @@ namespace GAssetBundle
 
             Debug.Log("CacheSize: " + AssetBundleCache.GetCacheSize());
 
-            var assetBundleName = "masterdata";
-            var assetName = "masterdata";
-            var yieldMasterdata = assetBundleManager.GetAsset<MasterData>(assetBundleName, assetName, new ConsoleProgress()).ToYieldInstruction();
-            yield return yieldMasterdata;
-            var masterData = yieldMasterdata.Result;
-            Debug.Log("MasterData version: " + masterData.version);
+            var assetBundleName = "cube";
+            var assetName = "Cube";
+            var yieldDownloadCube = assetBundleManager.GetAsset<GameObject>(assetBundleName, assetName, new ConsoleProgress()).ToYieldInstruction();
+            yield return yieldDownloadCube;
+            Instantiate(yieldDownloadCube.Result);
 
             Debug.Log("CacheSize: " + AssetBundleCache.GetCacheSize());
         }
-
-        class ConsoleProgress : IProgress<float>
-        {
-            public void Report(float value)
-            {
-                Debug.Log(value.ToString("f3"));
-            }
-        }
     }
 }
-
 ```
 ## License
 MIT
