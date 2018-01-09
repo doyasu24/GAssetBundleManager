@@ -88,6 +88,7 @@ namespace GAssetBundle
                 BuildAssetBundle(target, options);
                 Debug.Log("AssetBundle Build Finished: " + target);
             }
+            AssetDatabase.Refresh();
         }
 
         static void BuildAssetBundle(BuildTarget buildTarget, BuildAssetBundleOptions options)
