@@ -1,25 +1,32 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System;
+using System.Collections;
 using UnityEngine;
 using UniRx;
+using GAssetBundle.Web;
 
-namespace GAssetBundle
+namespace GAssetBundle.Sample
 {
     public class Sample : MonoBehaviour
     {
-        [SerializeField]
-        string assetBundleServerUrl;
-
-        void Start()
+        IEnumerator Start()
         {
-            AssetBundleManager.Instance.ConnectToServer(assetBundleServerUrl).Subscribe(_ => OnConnected());
-        }
+            var assetBundleUrl = "http://localhost:8080/AssetBundles/";
+            var assetBundleManager = AssetBundleManager.Instance;
+            var yieldConnectToServer = assetBundleManager.ConnectToServer(assetBundleUrl)
+                                              .OnErrorRetry<Unit, UnityWebRequestErrorException>(e => Debug.LogError(e.Message), TimeSpan.FromSeconds(5))
+                                              .ToYieldInstruction();
 
-        void OnConnected()
-        {
-            AssetBundleManager.Instance.GetAsset<GameObject>("cube", "Cube")
-                              .Subscribe(go => Instantiate(go));
+            yield return yieldConnectToServer;
 
+            Debug.Log("CacheSize: " + AssetBundleCache.GetCacheSize());
+
+            var assetBundleName = "cube";
+            var assetName = "Cube";
+            var yieldDownloadCube = assetBundleManager.GetAsset<GameObject>(assetBundleName, assetName, new ConsoleProgress()).ToYieldInstruction();
+            yield return yieldDownloadCube;
+            Instantiate(yieldDownloadCube.Result);
+
+            Debug.Log("CacheSize: " + AssetBundleCache.GetCacheSize());
         }
     }
 }
